@@ -1,10 +1,7 @@
-
-        
 import streamlit as st
 import json
 import random
 from datetime import datetime
-import plotly
 import pandas as pd
 from collections import Counter
 from reportlab.lib import colors
