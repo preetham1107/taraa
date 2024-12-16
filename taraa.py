@@ -1,3 +1,5 @@
+
+        
 import streamlit as st
 import json
 import random
@@ -9,7 +11,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from io import BytesIO
 import hashlib
-import matplotlib.colors as mcolors
 
 # Constants
 MOODS = ["Happy 😊", "Sad 😢", "Anxious 😰", "Calm 😌", "Excited 🎉"]
@@ -177,11 +178,8 @@ def insights_and_trends(username):
             df_moods["date"] = pd.to_datetime(df_moods["date"])
             df_moods = df_moods.sort_values("date")
             
-            fig = plotly.graph_objs.Figure(data=[
-                plotly.graph_objs.Bar(x=df_moods["date"], y=df_moods["intensity"], marker_color=df_moods["color"])
-            ])
-            fig.update_layout(title="Mood Intensity Over Time", xaxis_title="Date", yaxis_title="Intensity")
-            st.plotly_chart(fig)
+            st.subheader("Mood Intensity Over Time")
+            st.bar_chart(df_moods.set_index("date")["intensity"])
             
             mood_counts = Counter(df_moods["mood"])
             st.subheader("Mood Frequency 📊")
