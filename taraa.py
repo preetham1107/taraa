@@ -73,14 +73,14 @@ def save_user_data(username, data):
 
 # App sections
 def home():
-    st.header("Tara ✨, your new best friend")
+    st.header("Tara ✨, your new best friend 🏠")
     st.subheader("Today's Affirmation")
     st.info(random.choice(AFFIRMATIONS))
     if st.button("Get a new affirmation"):
         st.rerun()
 
 def mood_tracker(username):
-    st.header("Mood Tracker")
+    st.header("Mood Tracker 😊")
     data = load_user_data(username)
     
     mood = st.selectbox("How are you feeling today?", MOODS)
@@ -98,7 +98,7 @@ def mood_tracker(username):
         st.success("Mood saved successfully!")
 
 def daily_journal(username):
-    st.header("Daily Journal")
+    st.header("Daily Journal 📔")
     data = load_user_data(username)
     
     prompt = st.selectbox("Choose a prompt (optional):", [""] + JOURNAL_PROMPTS)
@@ -114,7 +114,7 @@ def daily_journal(username):
         st.success("Journal entry saved successfully!")
 
 def gratitude_log(username):
-    st.header("Gratitude Log")
+    st.header("Gratitude Log 🙏")
     data = load_user_data(username)
     
     gratitude = st.text_area("What are you grateful for today?")
@@ -128,7 +128,7 @@ def gratitude_log(username):
         st.success("Gratitude logged successfully!")
 
 def sleep_tracker(username):
-    st.header("Sleep Tracker")
+    st.header("Sleep Tracker 😴")
     data = load_user_data(username)
     
     date = st.date_input("Date")
@@ -145,7 +145,7 @@ def sleep_tracker(username):
         st.success("Sleep data saved successfully!")
 
 def memory_vault(username):
-    st.header("Memory Vault")
+    st.header("Memory Vault 🔒")
     data = load_user_data(username)
     
     if "memory_vault_password" not in data or data["memory_vault_password"] is None:
@@ -201,7 +201,7 @@ def memory_vault(username):
                 st.rerun()
 
 def goal_setting(username):
-    st.header("Goal Setting")
+    st.header("Goal Setting 🎯")
     data = load_user_data(username)
     
     goal = st.text_input("Set a new goal")
@@ -279,7 +279,7 @@ def generate_pdf_report(data, username):
     return buffer
 
 def export_data(username):
-    st.header("Export Your Data")
+    st.header("Export Your Data 📊")
     data = load_user_data(username)
     
     if not any(data.values()):
@@ -297,7 +297,7 @@ def export_data(username):
         st.success("PDF report exported successfully!")
 
 def login_signup():
-    st.header("Welcome to Tara ✨")
+    st.header("Meet Tara! ✨")
     choice = st.radio("Choose an option", ["Login", "Sign Up"])
     
     users = load_users()
