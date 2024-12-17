@@ -8,7 +8,6 @@ import pandas as pd
 from collections import Counter
 import hashlib
 import base64
-import matplotlib.pyplot as plt
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -220,44 +219,6 @@ def goal_setting(username):
         save_user_data(username, data)
         st.success("Goal saved successfully!")
 
-def generate_mood_chart(data):
-    df_moods = pd.DataFrame(data["moods"])
-    df_moods["date"] = pd.to_datetime(df_moods["date"])
-    df_moods = df_moods.sort_values("date")
-    
-    plt.figure(figsize=(10, 6))
-    plt.plot(df_moods["date"], df_moods["intensity"], marker='o')
-    plt.title("Mood Intensity Over Time")
-    plt.xlabel("Date")
-    plt.ylabel("Intensity")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    
-    img_buffer = io.BytesIO()
-    plt.savefig(img_buffer, format='png')
-    img_buffer.seek(0)
-    return img_buffer
-
-def generate_sleep_chart(data):
-    df_sleep = pd.DataFrame(data["sleep"])
-    df_sleep["date"] = pd.to_datetime(df_sleep["date"])
-    df_sleep = df_sleep.sort_values("date")
-    
-    plt.figure(figsize=(10, 6))
-    plt.plot(df_sleep["date"], df_sleep["duration"], marker='o', label="Duration")
-    plt.plot(df_sleep["date"], df_sleep["quality"], marker='s', label="Quality")
-    plt.title("Sleep Patterns Over Time")
-    plt.xlabel("Date")
-    plt.ylabel("Hours / Quality")
-    plt.legend()
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    
-    img_buffer = io.BytesIO()
-    plt.savefig(img_buffer, format='png')
-    img_buffer.seek(0)
-    return img_buffer
-
 def generate_pdf_report(data, username):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
@@ -328,31 +289,12 @@ def export_data(username):
     st.subheader("Data Preview")
     st.json(data)
 
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        if st.button("Export Mood Chart (PNG)"):
-            img_buffer = generate_mood_chart(data)
-            b64 = base64.b64encode(img_buffer.getvalue()).decode()
-            href = f'<a href="data:image/png;base64,{b64}" download="{username}_mood_chart.png">Download Mood Chart (PNG)</a>'
-            st.markdown(href, unsafe_allow_html=True)
-            st.success("Mood chart exported successfully!")
-
-    with col2:
-        if st.button("Export Sleep Chart (JPG)"):
-            img_buffer = generate_sleep_chart(data)
-            b64 = base64.b64encode(img_buffer.getvalue()).decode()
-            href = f'<a href="data:image/jpeg;base64,{b64}" download="{username}_sleep_chart.jpg">Download Sleep Chart (JPG)</a>'
-            st.markdown(href, unsafe_allow_html=True)
-            st.success("Sleep chart exported successfully!")
-
-    with col3:
-        if st.button("Export Full Report (PDF)"):
-            pdf_buffer = generate_pdf_report(data, username)
-            b64 = base64.b64encode(pdf_buffer.getvalue()).decode()
-            href = f'<a href="data:application/pdf;base64,{b64}" download="{username}_mental_health_report.pdf">Download Full Report (PDF)</a>'
-            st.markdown(href, unsafe_allow_html=True)
-            st.success("PDF report exported successfully!")
+    if st.button("Export Full Report (PDF)"):
+        pdf_buffer = generate_pdf_report(data, username)
+        b64 = base64.b64encode(pdf_buffer.getvalue()).decode()
+        href = f'<a href="data:application/pdf;base64,{b64}" download="{username}_mental_health_report.pdf">Download Full Report (PDF)</a>'
+        st.markdown(href, unsafe_allow_html=True)
+        st.success("PDF report exported successfully!")
 
 def login_signup():
     st.header("Welcome to Tara ✨")
@@ -386,37 +328,43 @@ def login_signup():
                 st.success("Account created successfully! Please log in.")
 
 def main():
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-
-    if not st.session_state.logged_in:
-        login_signup()
-    else:
-        st.sidebar.title(f"Welcome, {st.session_state.username}!")
-        
-        menu = ["Home", "Mood Tracker", "Daily Journal", "Gratitude Log", "Sleep Tracker", "Memory Vault", "Goal Setting", "Export Data", "Logout"]
-        choice = st.sidebar.selectbox("Navigation", menu)
-        
-        if choice == "Home":
-            home()
-        elif choice == "Mood Tracker":
-            mood_tracker(st.session_state.username)
-        elif choice == "Daily Journal":
-            daily_journal(st.session_state.username)
-        elif choice == "Gratitude Log":
-            gratitude_log(st.session_state.username)
-        elif choice == "Sleep Tracker":
-            sleep_tracker(st.session_state.username)
-        elif choice == "Memory Vault":
-            memory_vault(st.session_state.username)
-        elif choice == "Goal Setting":
-            goal_setting(st.session_state.username)
-        elif choice == "Export Data":
-            export_data(st.session_state.username)
-        elif choice == "Logout":
+    try:
+        st.write("Debug: Starting main function")
+        if 'logged_in' not in st.session_state:
             st.session_state.logged_in = False
-            st.session_state.username = None
-            st.rerun()
+
+        if not st.session_state.logged_in:
+            login_signup()
+        else:
+            st.sidebar.title(f"Welcome, {st.session_state.username}!")
+            
+            menu = ["Home", "Mood Tracker", "Daily Journal", "Gratitude Log", "Sleep Tracker", "Memory Vault", "Goal Setting", "Export Data", "Logout"]
+            choice = st.sidebar.selectbox("Navigation", menu)
+            
+            if choice == "Home":
+                home()
+            elif choice == "Mood Tracker":
+                mood_tracker(st.session_state.username)
+            elif choice == "Daily Journal":
+                daily_journal(st.session_state.username)
+            elif choice == "Gratitude Log":
+                gratitude_log(st.session_state.username)
+            elif choice == "Sleep Tracker":
+                sleep_tracker(st.session_state.username)
+            elif choice == "Memory Vault":
+                memory_vault(st.session_state.username)
+            elif choice == "Goal Setting":
+                goal_setting(st.session_state.username)
+            elif choice == "Export Data":
+                export_data(st.session_state.username)
+            elif choice == "Logout":
+                st.session_state.logged_in = False
+                st.session_state.username = None
+                st.rerun()
+        
+        st.write("Debug: Finished main function")
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     main()
