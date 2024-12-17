@@ -11,9 +11,11 @@ import base64
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph
 from PIL import Image
 
-# Constants
+# Constants (unchanged)
 MOODS = ["Happy", "Sad", "Anxious", "Calm", "Excited", "Angry", "Frustrated", "Confident", "Confused", "Grateful"]
 AFFIRMATIONS = [
     "You are capable of amazing things.",
@@ -45,7 +47,7 @@ JOURNAL_PROMPTS = [
     "Describe a recent accomplishment and how it made you feel.",
 ]
 
-# User authentication and data management functions
+# User authentication and data management functions (unchanged)
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -71,7 +73,7 @@ def save_user_data(username, data):
     with open(f"{username}_data.json", "w") as f:
         json.dump(data, f)
 
-# App sections
+# App sections (unchanged except for goal_setting and sleep_tracker)
 def home():
     st.header("Tara ✨, your new best friend 🏠")
     st.subheader("Today's Affirmation")
@@ -143,6 +145,15 @@ def sleep_tracker(username):
         })
         save_user_data(username, data)
         st.success("Sleep data saved successfully!")
+        
+        if duration < 5 and quality < 5:
+            st.warning("It looks like you didn't have a great night's sleep. Here are some tips to improve your sleep:")
+            st.write("1. Stick to a consistent sleep schedule")
+            st.write("2. Create a relaxing bedtime routine")
+            st.write("3. Limit screen time before bed")
+            st.write("4. Ensure your bedroom is dark, quiet, and cool")
+            st.write("5. Avoid caffeine and heavy meals close to bedtime")
+            st.write("Remember, good sleep is crucial for your mental and physical health. You've got this!")
 
 def memory_vault(username):
     st.header("Memory Vault 🔒")
@@ -204,11 +215,27 @@ def goal_setting(username):
     st.header("Goal Setting 🎯")
     data = load_user_data(username)
     
+    with st.expander("View Your Goals"):
+        if "goals" in data and data["goals"]:
+            for i, goal in enumerate(data["goals"], 1):
+                st.write(f"{i}. {goal['goal']} ({goal['type']}) - Due: {goal['deadline']}")
+                if goal['completed']:
+                    st.write("   ✅ Completed")
+                else:
+                    if st.button(f"Mark as Completed", key=f"complete_goal_{i}"):
+                        goal['completed'] = True
+                        save_user_data(username, data)
+                        st.rerun()
+        else:
+            st.write("You haven't set any goals yet. Start setting some goals below!")
+    
     goal = st.text_input("Set a new goal")
     goal_type = st.radio("Goal Type", ["Short-term", "Long-term"])
     deadline = st.date_input("Deadline")
     
     if st.button("Save Goal"):
+        if "goals" not in data:
+            data["goals"] = []
         data["goals"].append({
             "date_set": datetime.now().isoformat(),
             "goal": goal,
@@ -218,11 +245,13 @@ def goal_setting(username):
         })
         save_user_data(username, data)
         st.success("Goal saved successfully!")
+        st.rerun()
 
 def generate_pdf_report(data, username):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
+    styles = getSampleStyleSheet()
 
     c.setFont("Helvetica-Bold", 16)
     c.drawString(50, height - 50, f"Mental Health Report for {username}")
@@ -240,15 +269,26 @@ def generate_pdf_report(data, username):
             y -= 15
         y -= 20
 
-    # Journal summary
+    # Journal entries
     if data["journal"]:
-        c.drawString(50, y, "Journal Summary:")
+        c.drawString(50, y, "Journal Entries:")
         y -= 20
-        total_entries = len(data["journal"])
-        total_words = sum(entry["word_count"] for entry in data["journal"])
-        c.drawString(70, y, f"Total entries: {total_entries}")
-        y -= 15
-        c.drawString(70, y, f"Total words written: {total_words}")
+        for entry in data["journal"][-5:]:  # Show last 5 entries
+            p = Paragraph(f"Date: {entry['date'][:10]}<br/>Entry: {entry['entry'][:200]}...", styles['Normal'])
+            p.wrapOn(c, width - 100, height)
+            p.drawOn(c, 70, y - p.height)
+            y -= p.height + 10
+        y -= 20
+
+    # Gratitude logs
+    if data["gratitude"]:
+        c.drawString(50, y, "Gratitude Logs:")
+        y -= 20
+        for gratitude in data["gratitude"][-5:]:  # Show last 5 entries
+            p = Paragraph(f"Date: {gratitude['date'][:10]}<br/>Gratitude: {gratitude['gratitude'][:200]}...", styles['Normal'])
+            p.wrapOn(c, width - 100, height)
+            p.drawOn(c, 70, y - p.height)
+            y -= p.height + 10
         y -= 20
 
     # Sleep summary
@@ -262,15 +302,16 @@ def generate_pdf_report(data, username):
         c.drawString(70, y, f"Average sleep quality: {avg_quality:.2f}/10")
         y -= 20
 
-    # Goal summary
+    # Goals
     if data["goals"]:
-        c.drawString(50, y, "Goal Summary:")
+        c.drawString(50, y, "Goals:")
         y -= 20
-        total_goals = len(data["goals"])
-        completed_goals = sum(1 for goal in data["goals"] if goal["completed"])
-        c.drawString(70, y, f"Total goals: {total_goals}")
-        y -= 15
-        c.drawString(70, y, f"Completed goals: {completed_goals}")
+        for goal in data["goals"]:
+            status = "Completed" if goal["completed"] else "In Progress"
+            p = Paragraph(f"Goal: {goal['goal']}<br/>Type: {goal['type']}<br/>Deadline: {goal['deadline']}<br/>Status: {status}", styles['Normal'])
+            p.wrapOn(c, width - 100, height)
+            p.drawOn(c, 70, y - p.height)
+            y -= p.height + 10
         y -= 20
 
     c.showPage()
@@ -297,7 +338,7 @@ def export_data(username):
         st.success("PDF report exported successfully!")
 
 def login_signup():
-    st.header("Meet Tara!✨")
+    st.header("Meet Tara! ✨")
     choice = st.radio("Choose an option", ["Login", "Sign Up"])
     
     users = load_users()
@@ -329,7 +370,6 @@ def login_signup():
 
 def main():
     try:
-        st.write("Debug: Starting main function")
         if 'logged_in' not in st.session_state:
             st.session_state.logged_in = False
 
@@ -361,8 +401,6 @@ def main():
                 st.session_state.logged_in = False
                 st.session_state.username = None
                 st.rerun()
-        
-        st.write("Debug: Finished main function")
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
 
