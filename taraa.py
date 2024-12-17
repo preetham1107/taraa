@@ -297,7 +297,7 @@ def export_data(username):
         st.success("PDF report exported successfully!")
 
 def login_signup():
-    st.header("Meet Tara! ✨")
+    st.header("Meet Tara!✨")
     choice = st.radio("Choose an option", ["Login", "Sign Up"])
     
     users = load_users()
